@@ -1,4 +1,4 @@
-package com.unbe1iev.creator.mapper;
+package com.unbe1iev.creator.mapper.impl;
 
 import com.unbe1iev.common.mapper.Mapper;
 import com.unbe1iev.creator.dto.CreatorDetailsDto;
@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CreatorToCreatorDetailsMapper implements Mapper<Creator, CreatorDetailsDto> {
+public class CreatorToCreatorDetailsDtoMapper implements Mapper<Creator, CreatorDetailsDto> {
 
     @Override
     public @NotNull CreatorDetailsDto map(Creator inputObject) {

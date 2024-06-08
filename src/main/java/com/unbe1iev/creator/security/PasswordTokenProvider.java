@@ -17,7 +17,7 @@ public class PasswordTokenProvider extends TokenProvider<PasswordTokenData> {
 
     public static final String FAKE_TOKEN = "FAKE_TOKEN";
 
-    public PasswordTokenProvider(@Value("${token.provider.password:TgY55sz#25kLm3}") String keystorePassword) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException {
+    public PasswordTokenProvider(@Value("${token.provider.password:sDR5k5zj34Lks7}") String keystorePassword) throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException, UnrecoverableKeyException {
         super(keystorePassword);
     }
 

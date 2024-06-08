@@ -9,5 +9,9 @@ import java.util.Optional;
 @Repository
 public interface CreatorRepository extends JpaRepository<Creator, Long> {
 
-    Optional<Creator> findByEmailAndDomain(String email, String domain);
+    Optional<Creator> findByEmail(String email);
+
+    Optional<Creator> findByKeycloakId(String keycloakId);
+
+    Optional<Creator> findByUsername(String username);
 }

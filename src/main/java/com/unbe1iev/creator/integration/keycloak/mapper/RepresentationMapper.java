@@ -7,9 +7,7 @@ import java.util.List;
 
 public interface RepresentationMapper {
 
-    UserRepresentation getUserRepresentation(String email, String password, boolean confirmByEmail, boolean forceChangePassword);
-
     List<CredentialRepresentation> getCredentialsForChangeOperation(String newPassword, String oldPassword);
 
-    List<CredentialRepresentation> getCredentialsForChangeEmailOperation(String newEmail);
+    UserRepresentation getUserRepresentation(String username, String email, String password, boolean confirmByEmail, boolean forceChangePassword);
 }

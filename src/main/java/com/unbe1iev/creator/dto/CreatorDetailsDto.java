@@ -11,9 +11,8 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Builder
-@Schema(description = "Data transfer object from Creator")
+@Schema(description = "Data transfer object for Creator Details")
 public class CreatorDetailsDto {
-
     @NotNull
     @Schema(description = "Creator's identifier")
     private Long id;

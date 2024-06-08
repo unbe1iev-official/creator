@@ -4,19 +4,19 @@ import java.util.Set;
 
 public interface KeycloakService {
 
-    String getKeycloakUserId(String email, String domain);
+    String getKeycloakUserId(String email);
 
-    String createUser(String email, String password, String domain);
-    String createAdminUser(String email, String password, String domain);
+    String createUser(String username, String email, String password);
+    String createAdminUser(String username, String email, String password);
 
-    void addRole(String keycloakUserId, String roleName, String domain);
-    void setupUserProductRoles(String keycloakUserId, Set<String> userRoleNames, String domain);
-    void removeRole(String keycloakUserId, String roleName, String domain);
+    void addRole(String keycloakUserId, String roleName);
+    void setupUserProductRoles(String keycloakUserId, Set<String> userRoleNames);
+    void removeRole(String keycloakUserId, String roleName);
 
     String changeEmail(String keycloakUserId, String email);
 
     void changePassword(String keycloakUserId, String oldPassword, String newPassword);
     void clearResetPasswordRequiredFlag(String keycloakUserId);
 
-    void deleteUser(String keycloakUserId, String domain);
+    void deleteUser(String keycloakUserId);
 }

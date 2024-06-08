@@ -34,10 +34,10 @@ public class Creator extends Auditable {
     private Long id;
 
     @NotNull
-    private String externalId;
+    private String domain;
 
     @NotNull
-    private String domain;
+    private String keycloakId;
 
     @NotNull
     private String username;
@@ -48,9 +48,8 @@ public class Creator extends Auditable {
     @NotNull
     private String email;
     private String contactEmail;
-    @NotNull
+
     private LocalDate dateOfBirth;
-    private String avatarId;
 
     @Column(length = 5000)
     private String passwordToken;

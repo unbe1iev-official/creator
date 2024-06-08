@@ -1,6 +1,5 @@
 package com.unbe1iev.creator.integration.keycloak.service.impl;
 
-import com.unbe1iev.common.configuration.DomainHolder;
 import com.unbe1iev.common.exception.DefaultRuntimeException;
 import com.unbe1iev.creator.configuration.KeycloakConfiguration;
 import com.unbe1iev.creator.integration.keycloak.dto.KeycloakErrorDto;
@@ -29,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -42,20 +42,16 @@ import static org.keycloak.OAuth2Constants.PASSWORD;
 @RequiredArgsConstructor
 public class KeycloakServiceImpl implements KeycloakService {
 
-    public static final String ROLE_MAIN = "unbe1iev";
-    public static final String ROLE_USER = "user";
+    public static final String ROLE_CREATOR = "creator";
     public static final String ROLE_ADMIN = "admin";
     public static final String REALM_MASTER = "master";
-
     private static final String PRODUCT_ROLE_PREFIX = "prd_";
-
     private static final String CHANGE_PASSWORD_ATTRIBUTE = "CHANGE_PASSWORD";
 
-    private final DomainHolder domainHolder;
     private final KeycloakConfiguration keycloakConfiguration;
     private final RepresentationMapper representationMapper;
 
-    private RealmResource getRealm(String domain) {
+    private RealmResource getRealm() {
         return getKeycloakInstance(keycloakConfiguration).realm(keycloakConfiguration.getRealm());
     }
 
@@ -78,62 +74,43 @@ public class KeycloakServiceImpl implements KeycloakService {
                 .build();
     }
 
-    private void updateKeycloakUserPassword(String keycloakUserId, String domain, Supplier<List<CredentialRepresentation>> credentialRepresentationSupplier) {
-        RealmResource realm = getRealm(domain);
+    private void updateKeycloakUserPassword(String keycloakUserId, Supplier<List<CredentialRepresentation>> credentialRepresentationSupplier) {
+        RealmResource realm = getRealm();
         UserRepresentation user = realm.users().get(keycloakUserId).toRepresentation();
         user.setCredentials(credentialRepresentationSupplier.get());
         realm.users().get(keycloakUserId).update(user);
     }
 
     @Override
-    public String getKeycloakUserId(String email, String domain) {
-        RealmResource realm = getRealm(domain);
-
-        UserRepresentation user = realm.users()
-                .search(null, null, null, email, 0, 1)
-                .stream()
-                .findFirst()
-                .orElse(null);
-
-        if (user == null) {
-            return null;
-        }
-
-        return user.getId();
+    public String getKeycloakUserId(String email) {
+        return searchUser(email).map(UserRepresentation::getId).orElse(null);
     }
 
-    private UserRepresentation searchUser(String email, String domain) {
-        RealmResource realm = getRealm(domain);
-
-        UserRepresentation user = realm.users()
+    private Optional<UserRepresentation> searchUser(String email) {
+        RealmResource realm = getRealm();
+        return realm.users()
                 .search(email, 0, 1)
                 .stream()
-                .findFirst()
-                .orElse(null);
-        if (user != null) {
-            log.info("searched user found: {}", user.getUsername());
-        }
-        return user;
+                .findFirst();
     }
 
     @Override
-    public String createUser(String email, String password, String domain) {
-        return createUser(email, password, List.of(ROLE_MAIN), domain, false);
+    public String createUser(String username, String email, String password) {
+        return createUser(username, email, password, List.of(ROLE_CREATOR), false);
     }
 
     @Override
-    public String createAdminUser(String email, String password, String domain) {
-        return createUser(email, password, Collections.singletonList(ROLE_ADMIN), domain, true);
+    public String createAdminUser(String username, String email, String password) {
+        return createUser(username, email, password, Collections.singletonList(ROLE_ADMIN), true);
     }
 
-    private String createUser(String email, String password, List<String> roles, String domain, boolean forceChangePassword) {
-        UserRepresentation user = searchUser(email, domain);
-        if (user == null) {
-            user = createUserInternal(email, password, roles, domain, forceChangePassword);
-            log.info("created user: {} with roles: {}, with attributes: {}", user.getId(), roles, user.getAttributes());
-        } else {
-            final String userId = user.getId();
-            RealmResource realm = getRealm(domain);
+    private String createUser(String username, String email, String password, List<String> roles, boolean forceChangePassword) {
+        Optional<UserRepresentation> userOpt = searchUser(email);
+        UserRepresentation user = userOpt.orElseGet(() -> createUserInternal(username, email, password, roles, forceChangePassword));
+
+        if (userOpt.isPresent()) {
+            String userId = user.getId();
+            RealmResource realm = getRealm();
             roles.forEach(role -> addRoleToUser(userId, realm, role));
         }
 
@@ -141,13 +118,9 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     @NotNull
-    private UserRepresentation createUserInternal(String email,
-                                                  String password,
-                                                  List<String> roles,
-                                                  String domain,
-                                                  boolean forceChangePassword) {
-        RealmResource realm = getRealm(domain);
-        UserRepresentation userRepresentation = representationMapper.getUserRepresentation(email, password, false, forceChangePassword);
+    private UserRepresentation createUserInternal(String username, String email, String password, List<String> roles, boolean forceChangePassword) {
+        RealmResource realm = getRealm();
+        UserRepresentation userRepresentation = representationMapper.getUserRepresentation(username, email, password, false, forceChangePassword);
 
         try (Response response = realm.users().create(userRepresentation)) {
             throwIfErrorStatus(response);
@@ -161,8 +134,8 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     @Override
-    public void addRole(String keycloakUserId, String roleName, String domain) {
-        RealmResource realm = getRealm(domain);
+    public void addRole(String keycloakUserId, String roleName) {
+        RealmResource realm = getRealm();
         addRoleToUser(keycloakUserId, realm, roleName);
     }
 
@@ -192,8 +165,8 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     @Override
-    public void setupUserProductRoles(String keycloakUserId, Set<String> userRoleNamesToSetup, String domain) {
-        RealmResource realm = getRealm(domain);
+    public void setupUserProductRoles(String keycloakUserId, Set<String> userRoleNamesToSetup) {
+        RealmResource realm = getRealm();
 
         Map<String, RoleRepresentation> userRolesToSetup = filterOnlyExistingInKeycloak(realm, userRoleNamesToSetup);
         UserResource userResource = realm.users().get(keycloakUserId);
@@ -243,8 +216,8 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     @Override
-    public void removeRole(String keycloakUserId, String roleName, String domain) {
-        RealmResource realm = getRealm(domain);
+    public void removeRole(String keycloakUserId, String roleName) {
+        RealmResource realm = getRealm();
         RoleRepresentation role = realm.roles()
                 .get(roleName)
                 .toRepresentation();
@@ -261,31 +234,23 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     @Override
     public String changeEmail(String keycloakUserId, String email) {
-        String domain = domainHolder.getDomain();
         String lowerCaseEmail = email.toLowerCase();
-        RealmResource realm = getRealm(domain);
+        RealmResource realm = getRealm();
 
-        List<RoleRepresentation> existingUserRoles = realm.users().get(keycloakUserId)
-                .roles()
-                .realmLevel().listAll();
+        UserResource userResource = realm.users().get(keycloakUserId);
+        UserRepresentation userRepresentation = userResource.toRepresentation();
+        userRepresentation.setEmail(lowerCaseEmail);
 
-        updateKeycloakUserPassword(keycloakUserId,
-                domain, () -> representationMapper.getCredentialsForChangeEmailOperation(lowerCaseEmail));
+        userResource.update(userRepresentation);
 
-        String newKeycloakUserId = getUserKeycloakIdByEmail(lowerCaseEmail, domain);
-
-        copyRoles(realm, existingUserRoles, newKeycloakUserId);
-        tryToDeleteOldUser(keycloakUserId, domain);
-
-        return newKeycloakUserId;
+        return keycloakUserId;
     }
 
-    private String getUserKeycloakIdByEmail(String email, String domain) {
-        UserRepresentation user = searchUser(email, domain);
-        if (user == null) {
+    private String getUserKeycloakIdByEmail(String email) {
+        UserRepresentation user = searchUser(email).orElseThrow(() -> {
             log.error("User not found after email changed for: {}", email);
-            throw new UserNotFoundException(email);
-        }
+            return new UserNotFoundException(email);
+        });
         return user.getId();
     }
 
@@ -294,9 +259,9 @@ public class KeycloakServiceImpl implements KeycloakService {
         existingUserRoles.forEach(role -> addRoleToUser(newUserResource, role));
     }
 
-    private void tryToDeleteOldUser(String keycloakUserId, String domain) {
+    private void tryToDeleteOldUser(String keycloakUserId) {
         try {
-            deleteUser(keycloakUserId, domain);
+            deleteUser(keycloakUserId);
         } catch (Exception e) {
             log.error("try to delete old user: {}", e.getMessage() != null ? e.getMessage() : e.toString());
         }
@@ -304,13 +269,13 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     @Override
     public void changePassword(String keycloakUserId, String oldPassword, String newPassword) {
-        updateKeycloakUserPassword(keycloakUserId, domainHolder.getDomain(),
+        updateKeycloakUserPassword(keycloakUserId,
                 () -> representationMapper.getCredentialsForChangeOperation(newPassword, oldPassword));
     }
 
     @Override
     public void clearResetPasswordRequiredFlag(String keycloakUserId) {
-        RealmResource realm = getRealm(domainHolder.getDomain());
+        RealmResource realm = getRealm();
         UserRepresentation user = realm.users().get(keycloakUserId).toRepresentation();
 
         if (user.firstAttribute(CHANGE_PASSWORD_ATTRIBUTE) != null) {
@@ -320,17 +285,17 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     @Override
-    public void deleteUser(String keycloakUserId, String domain) {
+    public void deleteUser(String keycloakUserId) {
         log.info("deleted user: {}", keycloakUserId);
-        RealmResource realm = getRealm(domain);
-        setupUserProductRoles(keycloakUserId, Collections.emptySet(), domain);
+        RealmResource realm = getRealm();
+        setupUserProductRoles(keycloakUserId, Collections.emptySet());
         removeMainRoleFromUser(keycloakUserId, realm);
         realm.users().delete(keycloakUserId);
     }
 
     private void removeMainRoleFromUser(String keycloakUserId, RealmResource realm) {
         RoleRepresentation mainRole = realm.roles()
-                .get(ROLE_MAIN)
+                .get(ROLE_CREATOR)
                 .toRepresentation();
 
         realm.users().get(keycloakUserId)

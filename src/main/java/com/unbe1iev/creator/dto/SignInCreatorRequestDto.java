@@ -3,16 +3,17 @@ package com.unbe1iev.creator.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.ToString;
 
-import java.time.LocalDate;
-
-@Getter
-@Setter
+@Data
 @Builder
 @Schema(description = "Data transfer object for Creator creation.")
 public class SignInCreatorRequestDto {
+
+    @Schema(description = "Creator's generated keycloakId")
+    private String keycloakId;
+
     @NotNull
     @Schema(description = "Creator's username")
     private String username;
@@ -33,7 +34,9 @@ public class SignInCreatorRequestDto {
     @Schema(description = "Creator's additional email")
     private String contactEmail;
 
-    @NotNull
     @Schema(description = "Creator's birth date")
-    private LocalDate dateOfBirth;
+    private String dateOfBirth;
+
+    @ToString.Exclude
+    private String password;
 }

@@ -1,0 +1,2 @@
+INSERT INTO creator (domain, keycloak_id, username, first_name, last_name, phone_number, email, contact_email, date_of_birth, password_token, is_deleted, version, created_date_time, created_by, last_modified_date_time, last_modified_by)
+VALUES('unbe1iev', '4e1afb7f-1286-4337-b9a6-66b8bf399731', 'creator', 'Oskar', 'Jaworski', '123456789', 'creator@unbe1iev.com', 'contact@unbe1iev.com', '2000-02-18', 'Creator!@#', FALSE, 0, NOW(), 'system', NOW(), 'system')
