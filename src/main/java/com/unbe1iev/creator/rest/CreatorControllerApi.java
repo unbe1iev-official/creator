@@ -78,9 +78,9 @@ public interface CreatorControllerApi {
             @Parameter(name = "changeEmailRequestDto", description = "Creator email change data", required = true) @Valid @RequestBody ChangeEmailRequestDto changeEmailRequestDto,
             @Parameter(hidden = true) BindingResult result);
 
-    @Operation(summary = "Check email address availability",
+    @Operation(summary = "Check email address availability ",
             method = "checkEmail",
-            description = "This operation checks the availability of email address.",
+            description = "This operation checks the availability of email address and tells whenever it is taken or not.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successful operation"),
                     @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDto.class))),

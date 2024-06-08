@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('creator')")
 public class CreatorController implements CreatorControllerApi {
 
     private final RegistrationService registrationService;
@@ -48,6 +47,7 @@ public class CreatorController implements CreatorControllerApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('creator')")
     public StatusResponseDto changePassword(@Valid @RequestBody ChangePasswordDto changePasswordDto) {
         creatorChangePasswordValidator.validate(changePasswordDto);
         creatorService.changePassword(changePasswordDto);
@@ -60,6 +60,7 @@ public class CreatorController implements CreatorControllerApi {
     }
 
     @Override
+    @PreAuthorize("hasRole('creator')")
     public ResponseEntity<CreatorDetailsDto> changeEmail(@Valid @RequestBody ChangeEmailRequestDto changeEmailRequestDto, BindingResult result) {
         return new ResponseEntity<>(creatorService.changeEmail(changeEmailRequestDto), HttpStatus.OK);
     }
