@@ -23,6 +23,6 @@ public class CreatorChangePasswordValidator implements CreateValidator<ChangePas
     @Override
     public void validate(ChangePasswordDto toValidate) {
         new CreatorChangePasswordValidator.ValidatorContext()
-                .passwordValid(toValidate);
+                .passwordsValid(toValidate);
     }
 }

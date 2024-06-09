@@ -8,6 +8,7 @@ public interface KeycloakService {
 
     String createUser(String username, String email, String password);
     String createAdminUser(String username, String email, String password);
+    boolean isUsernameTaken(String username);
 
     void addRole(String keycloakUserId, String roleName);
     void setupUserProductRoles(String keycloakUserId, Set<String> userRoleNames);
@@ -15,6 +16,7 @@ public interface KeycloakService {
 
     String changeEmail(String keycloakUserId, String email);
 
+    boolean verifyPassword(String email, String password);
     void changePassword(String keycloakUserId, String oldPassword, String newPassword);
     void clearResetPasswordRequiredFlag(String keycloakUserId);
 

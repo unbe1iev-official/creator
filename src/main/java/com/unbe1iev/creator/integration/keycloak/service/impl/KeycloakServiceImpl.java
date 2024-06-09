@@ -19,6 +19,7 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -47,6 +48,7 @@ public class KeycloakServiceImpl implements KeycloakService {
     public static final String REALM_MASTER = "master";
     private static final String PRODUCT_ROLE_PREFIX = "prd_";
     private static final String CHANGE_PASSWORD_ATTRIBUTE = "CHANGE_PASSWORD";
+    private static final String ADMIN_CLI_CLIENT = "admin-cli";
 
     private final KeycloakConfiguration keycloakConfiguration;
     private final RepresentationMapper representationMapper;
@@ -102,6 +104,13 @@ public class KeycloakServiceImpl implements KeycloakService {
     @Override
     public String createAdminUser(String username, String email, String password) {
         return createUser(username, email, password, Collections.singletonList(ROLE_ADMIN), true);
+    }
+
+    @Override
+    public boolean isUsernameTaken(String username) {
+        RealmResource realm = getRealm();
+        List<UserRepresentation> users = realm.users().search(username, true);
+        return !users.isEmpty();
     }
 
     private String createUser(String username, String email, String password, List<String> roles, boolean forceChangePassword) {
@@ -244,6 +253,24 @@ public class KeycloakServiceImpl implements KeycloakService {
         userResource.update(userRepresentation);
 
         return keycloakUserId;
+    }
+
+    @Override
+    public boolean verifyPassword(String email, String password) {
+        try (Keycloak keycloak = KeycloakBuilder.builder()
+                .serverUrl(keycloakConfiguration.getUrl())
+                .realm(keycloakConfiguration.getRealm())
+                .clientId(ADMIN_CLI_CLIENT)
+                .username(email)
+                .password(password)
+                .build()) {
+
+            AccessTokenResponse tokenResponse = keycloak.tokenManager().grantToken();
+            return tokenResponse != null && tokenResponse.getToken() != null;
+        } catch (Exception e) {
+            log.error("Password verification failed for user: {}", email, e);
+            return false;
+        }
     }
 
     private String getUserKeycloakIdByEmail(String email) {

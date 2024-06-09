@@ -14,9 +14,9 @@ services:
       - "3301:3306"
     environment:
       MARIADB_USER: creator
-      MARIADB_PASSWORD: 3pAu2XW^djz6@LdN
+      MARIADB_PASSWORD: password
       MARIADB_DATABASE: creator
-      MARIADB_ROOT_PASSWORD: 9gSmDvu2u39Zebdj
+      MARIADB_ROOT_PASSWORD: rootpassword
     volumes:
       - creator-db-data:/var/lib/mariadb
 
@@ -33,5 +33,5 @@ services:
     environment:
       spring.datasource.url: jdbc:mariadb://creator-db:3301/creator
       spring.datasource.username: creator
-      spring.datasource.password: 3pAu2XW^djz6@LdN
+      spring.datasource.password: password
     command: --spring.profiles.active=dev

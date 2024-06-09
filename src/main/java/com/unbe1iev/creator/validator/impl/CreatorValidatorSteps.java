@@ -5,6 +5,7 @@ import com.unbe1iev.common.exception.MessageExtractor;
 import com.unbe1iev.common.validator.impl.CommonValidatorStepsImpl;
 import com.unbe1iev.creator.dto.ChangePasswordDto;
 import com.unbe1iev.creator.dto.SignInCreatorRequestDto;
+import com.unbe1iev.creator.entity.Creator;
 import com.unbe1iev.creator.service.CreatorService;
 
 class CreatorValidatorSteps extends CommonValidatorStepsImpl {
@@ -30,9 +31,18 @@ class CreatorValidatorSteps extends CommonValidatorStepsImpl {
         return this;
     }
 
-    CreatorValidatorSteps passwordValid(ChangePasswordDto toValidate) {
+    CreatorValidatorSteps passwordsValid(ChangePasswordDto toValidate) {
+        Creator creator = creatorService.getCreatorByKeycloakId();
+        if (!creatorService.verifyPassword(creator.getEmail(), toValidate.getOldPassword())) {
+            throw new ApplicationValidationException("Old password is incorrect");
+        }
+
         if (!toValidate.getNewPassword().equals(toValidate.getNewPassword2())) {
-            throw new ApplicationValidationException("Passwords must be equal");
+            throw new ApplicationValidationException("New passwords must be equal");
+        }
+
+        if (toValidate.getOldPassword().equals(toValidate.getNewPassword())) {
+            throw new ApplicationValidationException("New password cannot be the same as old password");
         }
         return this;
     }

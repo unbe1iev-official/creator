@@ -36,7 +36,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build --no-cache -t ${{ secrets.HARBOR_REGISTRY }}/${{ secrets.PROJECT_NAME }}-${{ github.ref_name }}/${{ github.event.repository.name }}:1.0.0 --build-arg COMMON_IMAGE=${{ env.COMMON_IMAGE }} .
+          docker build -t ${{ secrets.HARBOR_REGISTRY }}/${{ secrets.PROJECT_NAME }}-${{ github.ref_name }}/${{ github.event.repository.name }}:1.0.0 --build-arg COMMON_IMAGE=${{ env.COMMON_IMAGE }} .
 
       - name: Push Docker image
         run: |

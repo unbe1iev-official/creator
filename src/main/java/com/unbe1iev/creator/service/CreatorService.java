@@ -20,4 +20,6 @@ public interface CreatorService {
     CreatorDetailsDto changeEmail(ChangeEmailRequestDto changeEmailRequestDto);
 
     Creator getCreatorByKeycloakId();
+
+    boolean verifyPassword(String email, String oldPassword);
 }

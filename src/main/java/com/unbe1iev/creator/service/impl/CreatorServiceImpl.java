@@ -44,7 +44,7 @@ public class CreatorServiceImpl implements CreatorService {
     @Override
     public Boolean isUsernameTaken(String username) {
         log.info("Checking availability of username: {}", username);
-        return creatorRepository.findByUsername(username).isPresent();
+        return creatorRepository.findByUsername(username).isPresent() || keycloakService.isUsernameTaken(username);
     }
 
     @Override
@@ -80,5 +80,10 @@ public class CreatorServiceImpl implements CreatorService {
         String userKeycloakId = SecurityUtil.getLoggedUserKeycloakId();
         return creatorRepository.findByKeycloakId(userKeycloakId)
                 .orElseThrow(() -> new NoSuchElementException(userKeycloakId));
+    }
+
+    @Override
+    public boolean verifyPassword(String email, String oldPassword) {
+        return keycloakService.verifyPassword(email, oldPassword);
     }
 }
